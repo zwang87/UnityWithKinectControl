@@ -137,9 +137,19 @@ namespace KinectForUnityTest
                             }
 
                             labelText = handSide + " " + action;
-                            Trace.WriteLine(labelText);
+
+
+                            
                             this.label1.Content = labelText;
                             udpConnection.SendData(System.Text.Encoding.Default.GetBytes(labelText));
+                        
+                        
+                        }
+                        if (handPointer.HandType == InteractionHandType.Right && handPointer.IsTracked)
+                        {
+                            string pos = "pos: " + handPointer.RawX + " " + handPointer.RawY + " " + handPointer.RawZ;
+                            Trace.WriteLine(pos);
+                            udpConnection.SendData(pos);
                         }
                     }
                 }

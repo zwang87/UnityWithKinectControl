@@ -17,8 +17,11 @@ public class UDPReceiver : MonoBehaviour {
 	
 	private GameObject marker;
 	
-	public static int posX = 0;
-	public static int posY = 0;
+	public double handPosX = 0;
+	public double handPosY = 0;
+	public double handPosZ = 0;
+	public string content = "";
+	public static bool gripped = false;
 
 	private System.Object thisLock = new System.Object();
 
@@ -34,7 +37,7 @@ public class UDPReceiver : MonoBehaviour {
 		marker.AddComponent("TestObjCollider");
 		marker.AddComponent<Rigidbody>();
 		marker.collider.isTrigger = false;
-		marker.rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+		//marker.rigidbody.constraints = RigidbodyConstraints.FreezeAll;
 	}
 	
 	private void ReceiveData()
@@ -48,19 +51,25 @@ public class UDPReceiver : MonoBehaviour {
 			{
 				IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
 				byte[] data = client.Receive(ref ip);
-				
-				string content = Encoding.UTF8.GetString(data);
 				lock(thisLock){
-				//Debug.Log(content);
-				lastReceivedUPDpacket = content;
-				allReceivedUPDpacket += content;
-				
-				string[] array = content.Split(',');
-				//Debug.Log(array[0] + "   **  " + array[1]);
-				posX = (int)Convert.ToDouble(array[0]);
-				posY = (int)Convert.ToDouble(array[1]);
-				}
-				
+					content = Encoding.UTF8.GetString(data);
+					//Debug.Log(content);
+					lastReceivedUPDpacket = content;
+					allReceivedUPDpacket += content;
+		
+					string[] array = content.Split(' ');
+					if(array[0] == "pos:"){
+						handPosX = Convert.ToDouble(array[1]);
+						handPosY = -1 * Convert.ToDouble(array[2]);
+						handPosZ = Convert.ToDouble(array[3]);
+					}
+					else{
+						if(array[2] == "Gripped")
+							gripped = true;
+						else if(array[2] == "Released")
+							gripped = false;
+					}						
+				}		
 			}
 			catch(Exception e)
 			{
@@ -71,10 +80,15 @@ public class UDPReceiver : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		//marker.transform.position = new Vector3(posX, posY, 0);
-		//Debug.Log(posX + "////" + posY);
-		//Debug.Log(content);
-		marker.transform.position = new Vector3(posX, posY, 0);
+		if(gripped){
+			marker.transform.localScale = new Vector3(2, 2, 2);
+			//Debug.Log("gripped");
+		}
+		else{
+			marker.transform.localScale = new Vector3(1, 1, 1);
+			//Debug.Log("released");
+		}
+		marker.transform.position = new Vector3((float)handPosX, (float)handPosY, (float)handPosZ);
 	}
 	
 	void OnDisable()

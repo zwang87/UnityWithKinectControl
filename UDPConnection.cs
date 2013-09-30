@@ -24,6 +24,11 @@ namespace KinectForUnityTest
             client.Send(data, data.Length, ip, port);
         }
 
+        public void SendData(string data)
+        {
+            SendData(System.Text.Encoding.Default.GetBytes(data));
+        }
+
         public void CloseConnection()
         {
             client.Close();
